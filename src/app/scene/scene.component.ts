@@ -66,10 +66,7 @@ export class SceneComponent implements AfterViewInit {
     });
     this.renderer.setPixelRatio(devicePixelRatio);
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor(0xffffff, 1);
-    this.renderer.autoClear = true;
     let component: SceneComponent = this;
     (function render() {
       requestAnimationFrame(render);
@@ -78,9 +75,12 @@ export class SceneComponent implements AfterViewInit {
   }
   // 控制器
   public addControls() {
-    this.controls = new THREE.OrbitControls(this.camera);
+    this.controls = new THREE.OrbitControls(this.camera, this.canvas);
     this.controls.rotateSpeed = 1.0;
     this.controls.zoomSpeed = 1.2;
+    this.controls.enablePan = false;
+    this.controls.minDistance = 220;
+    this.controls.maxDistance = 800;
     this.controls.addEventListener('change', this.render);
     // this.controls.addEventListener('start', () => {});
     // this.controls.addEventListener('end', () => {});s
@@ -102,11 +102,12 @@ export class SceneComponent implements AfterViewInit {
   private onModelLoadingCompleted(loadeMesh) {
     // 餐厅
     let objM = this.onLoaderMaterial("assets/pic/FastFood.png");  // 加载材质纹理
-    loadeMesh.traverse( function ( child ) {
-      if ( child instanceof THREE.Mesh ) {
-          child.material = objM;
+    loadeMesh.traverse(function (child) {
+      if (child instanceof THREE.Mesh) {
+        child.material = objM;
+        child.castShadow = true;
       }
-  });
+    });
     // loadeMesh.children[0].material = objM;
     loadeMesh.scale.set(15, 15, 15);
     loadeMesh.position.set(0, 0, 0);
@@ -114,18 +115,12 @@ export class SceneComponent implements AfterViewInit {
     this.scene.add(loadeMesh);
     //    地板
     var planeWidth = this.canvas.clientWidth > this.canvas.clientHeight ? this.canvas.clientHeight : planeWidth = this.canvas.clientHeight;
-    var planeGeometry = new THREE.PlaneGeometry(this.canvas.clientWidth, this.canvas.clientWidth);
-    var planeMaterial = new THREE.MeshStandardMaterial();
-    planeMaterial.side = THREE.DoubleSide;
-    var texture = new THREE.TextureLoader().load("assets/pic/wood-floor.jpg");
-    texture.repeat.set(8, 8);
-    texture.wrapS = THREE.RepeatWrapping; // X轴 行为 重复自己
-    texture.wrapT = THREE.RepeatWrapping; // y轴 行为 重复自己
-    planeMaterial.map = texture;
-    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    var geometry = new THREE.PlaneBufferGeometry(planeWidth, planeWidth);
+    var material = new THREE.MeshBasicMaterial({color: 0x808080, side: THREE.DoubleSide});
+    var plane = new THREE.Mesh(geometry, material);
     plane.rotation.x = -0.5 * Math.PI;
-    plane.receiveShadow = true;    //告诉底部平面需要接收阴影
-    this.scene.add(plane);
+   this. scene.add(plane);
+
     this.render();
   }
 
